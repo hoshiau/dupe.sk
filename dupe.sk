@@ -1,0 +1,129 @@
+options:
+  cooldown: 5 # Cooldown is in seconds
+  errorMessage: "&cYou are not allowed to use that command."
+  blacklistMessage: "&a&lDupe &8➡ &7Blacklisted items: &fEnchanted Golden Apple &7and &fElytra."
+  cooldownMessage: "&a&lDupe &8➡ &7You must wait &f%{dupe::cd.%player%}%s &7to use &f/dupe &7again."
+  invalidMessage: "&a&lDupe &8➡ &7You must be holding an item to use &f/dupe."
+  blacklistedItemMessage: "&a&lDupe &8➡ &7You can not dupe that item."
+  dupeAmountThree: "dupeamount.three" # Permission that allows the usage of /dupe [2, 3]
+  dupeAmountSix: "dupeamount.six" # Permission that allows the usage of /dupe [4, 5, 6]
+  dupeAmountTen: "dupeamount.ten" # Permission that allows the usage of /dupe [7, 8, 9, 10]
+
+on load:
+  set {blacklist::*} to enchanted golden apple and elytra # Correct Syntax: item and item and item
+
+# Example of nbt blacklisted item (Used for custom items)
+# command /example:
+#   trigger:
+#     give player netherite helmet named "Blacklisted Helmet" with nbt compound from "{blacklisted:true}"
+
+
+
+# WARNING! DO NOT CHANGE PAST THIS POINT
+
+
+
+
+command /blacklist:
+  trigger:
+    send {@blacklistMessage} to player
+
+command /dupe [<integer>]:
+  trigger:
+    if {dupe::cd.%player%} is set:
+      send {@cooldownMessage} to player
+      stop
+    if player's held item is air:
+      send {@invalidMessage} to player
+      stop
+    set {_item} to player's held item
+    if {blacklist::*} contains {_item}:
+      send {@blacklistedItemMessage} to player
+      stop
+    if tag "blacklisted" of nbt compound of {_item} is set:
+      send {@blacklistedItemMessage} to player
+      stop
+    if player's held item is any shulker box:
+      checkShulker(player, (player's tool))
+      if {blacklisted.%player%} is true:
+        stop
+
+    if arg is not set:
+      give {_item} to player
+      set {dupe::cd.%player%} to {@cooldown}
+      set {_loopamount} to {@cooldown} * 10
+      loop {_loopamount} times:
+        remove 0.1 from {dupe::cd.%player%}
+        if {dupe::cd.%player%} = 0:
+          delete {dupe::cd.%player%}
+        wait 0.1 seconds
+
+    if arg is 1:
+      give {_item} to player
+      set {dupe::cd.%player%} to {@cooldown}
+      set {_loopamount} to {@cooldown} * 10
+      loop {_loopamount} times:
+        remove 0.1 from {dupe::cd.%player%}
+        if {dupe::cd.%player%} = 0:
+          delete {dupe::cd.%player%}
+        wait 0.1 seconds
+
+    if arg is 2 or 3:
+      if player has permission {@dupeAmountThree}:
+        loop arg times:
+          give {_item} to player
+        set {dupe::cd.%player%} to {@cooldown}
+        set {_loopamount} to {@cooldown} * 10
+        loop {_loopamount} times:
+          remove 0.1 from {dupe::cd.%player%}
+          if {dupe::cd.%player%} = 0:
+            delete {dupe::cd.%player%}
+          wait 0.1 seconds
+      else:
+        send {@errorMessage} to player
+
+    if arg is 4 or 5 or 6:
+      if player has permission {@dupeAmountSix}:
+        loop arg times:
+          give {_item} to player
+        set {dupe::cd.%player%} to {@cooldown}
+        set {_loopamount} to {@cooldown} * 10
+        loop {_loopamount} times:
+          remove 0.1 from {dupe::cd.%player%}
+          if {dupe::cd.%player%} = 0:
+            delete {dupe::cd.%player%}
+          wait 0.1 seconds
+      else:
+        send {@errorMessage} to player
+ 
+    if arg is 7 or 8 or 9 or 10:
+      if player has permission {@dupeAmountTen}:
+        loop arg times:
+          give {_item} to player
+        set {dupe::cd.%player%} to {@cooldown}
+        set {_loopamount} to {@cooldown} * 10
+        loop {_loopamount} times:
+          remove 0.1 from {dupe::cd.%player%}
+          if {dupe::cd.%player%} = 0:
+            delete {dupe::cd.%player%}
+          wait 0.1 seconds
+      else:
+        send {@errorMessage} to player
+
+function checkShulker(p:player, shulker:item) :: items:
+  {_shulker} is any shulker box
+  set {_nbt::*} to ((compound list tag) ("BlockEntityTag;Items") of (nbt compound of ({_shulker})))
+  set {_items::*} to (item from nbt ({_nbt::*}))
+  loop {_items::*}:
+    if {blacklist::*} contains loop-value:
+      send {@blacklistedItemMessage} to {_p}
+      set {blacklisted.%{_p}%} to true
+      wait 0.1 seconds
+      delete {blacklisted.%{_p}%}
+      stop
+    if tag "blacklisted" of nbt compound of loop-value is set:
+      send {@blacklistedItemMessage} to {_p}
+      set {blacklisted.%{_p}%} to true
+      wait 0.1 seconds
+      delete {blacklisted.%{_p}%}
+      stop
